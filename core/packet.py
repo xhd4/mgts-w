@@ -1,13 +1,17 @@
-import re
+# -*- coding: utf-8 -*-
 
+import re
 from subprocess import Popen, PIPE
 from multiprocessing import Process, Queue
+
 from scapy.layers.dot11 import Dot11, Dot11Elt
 
 BROADCAST_BSSID = 'FF:FF:FF:FF:FF:FF'
 MGTS_MASK_ESSID = 'MGTS_GPON_'
 
+
 class PacketHandler(object):
+
     def __init__(self, power, connect_int):
         self.power_signal = power
         self.parsed_accesses_points = []
@@ -19,7 +23,6 @@ class PacketHandler(object):
                                         args=(self.connect_queue,
                                               connect_int, ))
         self.process_connect_to_access_point.start()
-
 
     def parser_elements(self, packet):
         bssid = packet[Dot11].addr3.upper()
@@ -39,8 +42,6 @@ class PacketHandler(object):
         item_access_point = None
         channel = int(ord(packet[Dot11Elt:3].info))
 
-        print bssid, power, essid, channel
-
         if MGTS_MASK_ESSID in essid:
             if power >= self.power_signal:
                 item_access_point = (essid, re.sub(':', '', bssid.lower()[6:]))
@@ -56,7 +57,6 @@ class PacketHandler(object):
         while True:
             try:
                 item_queue = queue.get()
-
                 command = 'nmcli -w 12 dev wifi con {} password {}'.format(*item_queue)
                 command = command.split(' ')
                 sub_proc = Popen(command, stdout=PIPE).communicate()
@@ -64,8 +64,7 @@ class PacketHandler(object):
                     print('''Successful Connect:
                         ESSID: {}
                         PASSWORD: {}'''.format(*item_queue))
-                    stt = Popen(['nmcli', 'dev', 'disconnect', connect_int],
-                                stdout=PIPE).communicate()
-
+                    close_connect = Popen(['nmcli', 'dev', 'disconnect', connect_int],
+                                          stdout=PIPE).communicate()
             except KeyboardInterrupt:
                 break
