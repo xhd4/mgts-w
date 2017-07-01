@@ -13,7 +13,8 @@ Checker passwords wirelesses APs (MGTS ISP)
 	cd mgts-env
 	source bin/activate
 	git clone https://github.com/xhda/mgts-w.git
-	pip install scapy
+	cd mgts-w
+	pip install -r requirements.txt
 
 # Usage
 ### Run
